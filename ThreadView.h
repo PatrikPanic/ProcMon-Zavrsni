@@ -1,11 +1,11 @@
 #pragma once
 
-#include <afxcview.h>
+#include "SortedListView.h"
 
 class CProcMonDoc;
 
 // CThreadView - pogled s popisom dretvi odabranog procesa.
-class CThreadView : public CListView
+class CThreadView : public CSortedListView
 {
     DECLARE_DYNCREATE(CThreadView)
 
@@ -33,7 +33,9 @@ private:
     };
 
     void InsertColumns();
-    void FillList();
+
+    virtual void FillList();
+    virtual bool IsLess(size_t leftIndex, size_t rightIndex) const;
 
 public:
     virtual ~CThreadView();

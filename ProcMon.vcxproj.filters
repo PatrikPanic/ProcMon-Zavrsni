@@ -24,6 +24,33 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EnvironmentCollector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EnvironmentView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NtApi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectNameQuery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HandleCollector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HandleView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HexView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HistoryCollector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="MainFrm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,6 +69,21 @@
     <ClInclude Include="Commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MemoryCollector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryMapView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="ModuleCollector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -51,10 +93,22 @@
     <ClInclude Include="ProcessCollector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ScanProgressDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="ProcessView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SortedListView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="StringIDs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringScanner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SysUtil.h">
@@ -71,6 +125,33 @@
     <ClCompile Include="ProcMon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EnvironmentCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EnvironmentView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NtApi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectNameQuery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HandleCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HandleView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HexView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HistoryCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="MainFrm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,6 +159,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryMapView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ModuleCollector.cpp">
@@ -89,10 +185,22 @@
     <ClCompile Include="ProcessCollector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ScanProgressDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ProcessView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProcMonDoc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SortedListView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringScanner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SysUtil.cpp">

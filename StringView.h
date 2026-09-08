@@ -4,13 +4,14 @@
 
 class CProcMonDoc;
 
-// CModuleView - pogled s popisom modula (DLL-ova) odabranog procesa.
-class CModuleView : public CSortedListView
+// CStringView - pogled s popisom znakovnih nizova pronadenih u memoriji
+// odabranog procesa.
+class CStringView : public CSortedListView
 {
-    DECLARE_DYNCREATE(CModuleView)
+    DECLARE_DYNCREATE(CStringView)
 
 protected:
-    CModuleView();
+    CStringView();
 
 public:
     CProcMonDoc* GetDocument() const;
@@ -25,10 +26,10 @@ protected:
 private:
     enum Column
     {
-        colModule = 0,
-        colBaseAddress,
-        colSize,
-        colPath
+        colAddress = 0,
+        colKind,
+        colLength,
+        colText
     };
 
     void InsertColumns();
@@ -37,5 +38,5 @@ private:
     virtual bool IsLess(size_t leftIndex, size_t rightIndex) const;
 
 public:
-    virtual ~CModuleView();
+    virtual ~CStringView();
 };

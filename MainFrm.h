@@ -12,10 +12,18 @@ public:
     CMainFrame();
 
     void SetStatusText(LPCTSTR lpszText);
+    void SetAddressText(ULONGLONG address);
+
+    // Prebacuje prikaz na karticu s pogledom zadane vrste.
+    void ActivateView(CRuntimeClass* pViewClass);
 
 protected:
     afx_msg int  OnCreate(LPCREATESTRUCT lpCreateStruct);
     afx_msg void OnFilterChanged();
+    afx_msg void OnAnalyze();
+    afx_msg void OnUpdateNeedsProcess(CCmdUI* pCmdUI);
+    afx_msg void OnHexView();
+    afx_msg void OnAddressChanged();
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg void OnDestroy();
 

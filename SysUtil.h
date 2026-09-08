@@ -22,6 +22,11 @@ public:
     // Pretvara oznaku greske sustava (GetLastError) u citljiv opis.
     static CString FormatSystemError(DWORD dwError);
 
+    // Pretvara putanju u obliku uredaja, npr. "\Device\HarddiskVolume3\...",
+    // u uobicajen oblik s oznakom pogona. Ako odgovarajuci pogon nije pronaden,
+    // putanja se vraca nepromijenjena.
+    static CString ToDosPath(const CString& devicePath);
+
     // Spaja dva dijela FILETIME strukture u jedan 64-bitni broj.
     static ULONGLONG ToUInt64(const FILETIME& ft);
 };

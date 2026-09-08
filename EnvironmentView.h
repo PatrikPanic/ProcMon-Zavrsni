@@ -4,13 +4,13 @@
 
 class CProcMonDoc;
 
-// CModuleView - pogled s popisom modula (DLL-ova) odabranog procesa.
-class CModuleView : public CSortedListView
+// CEnvironmentView - pogled s varijablama okoline odabranog procesa.
+class CEnvironmentView : public CSortedListView
 {
-    DECLARE_DYNCREATE(CModuleView)
+    DECLARE_DYNCREATE(CEnvironmentView)
 
 protected:
-    CModuleView();
+    CEnvironmentView();
 
 public:
     CProcMonDoc* GetDocument() const;
@@ -25,10 +25,8 @@ protected:
 private:
     enum Column
     {
-        colModule = 0,
-        colBaseAddress,
-        colSize,
-        colPath
+        colName = 0,
+        colValue
     };
 
     void InsertColumns();
@@ -37,5 +35,5 @@ private:
     virtual bool IsLess(size_t leftIndex, size_t rightIndex) const;
 
 public:
-    virtual ~CModuleView();
+    virtual ~CEnvironmentView();
 };

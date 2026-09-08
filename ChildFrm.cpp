@@ -5,6 +5,12 @@
 #include "ProcessView.h"
 #include "ThreadView.h"
 #include "ModuleView.h"
+#include "MemoryView.h"
+#include "GraphView.h"
+#include "EnvironmentView.h"
+#include "HexView.h"
+#include "HandleView.h"
+#include "StringView.h"
 #include "SysUtil.h"
 #include "StringIDs.h"
 
@@ -54,6 +60,24 @@ CString CChildFrame::TitleForView(CRuntimeClass* pViewClass)
 
     if (pViewClass == RUNTIME_CLASS(CModuleView))
         return CSysUtil::LoadStr(IDS_TITLE_MODULES);
+
+    if (pViewClass == RUNTIME_CLASS(CMemoryView))
+        return CSysUtil::LoadStr(IDS_TITLE_MEMORY);
+
+    if (pViewClass == RUNTIME_CLASS(CGraphView))
+        return CSysUtil::LoadStr(IDS_TITLE_GRAPH);
+
+    if (pViewClass == RUNTIME_CLASS(CEnvironmentView))
+        return CSysUtil::LoadStr(IDS_TITLE_ENVIRONMENT);
+
+    if (pViewClass == RUNTIME_CLASS(CHexView))
+        return CSysUtil::LoadStr(IDS_TITLE_HEX);
+
+    if (pViewClass == RUNTIME_CLASS(CHandleView))
+        return CSysUtil::LoadStr(IDS_TITLE_HANDLES);
+
+    if (pViewClass == RUNTIME_CLASS(CStringView))
+        return CSysUtil::LoadStr(IDS_TITLE_STRINGS);
 
     return CString();
 }

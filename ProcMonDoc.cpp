@@ -3,6 +3,7 @@
 #include "ProcMon.h"
 #include "ProcMonDoc.h"
 #include "MainFrm.h"
+#include "ScanProgressDlg.h"
 #include "SysUtil.h"
 #include "Commands.h"
 #include "StringIDs.h"
@@ -27,6 +28,10 @@ END_MESSAGE_MAP()
 
 CProcMonDoc::CProcMonDoc()
     : m_selectedPid(0),
+      m_memoryPid(0),
+      m_handlesPid(0),
+      m_stringsPid(0),
+      m_selectedRegion(-1),
       m_sortColumn(colCpu),
       m_bSortAscending(false),      // najzahtjevniji procesi na vrhu
       m_bAutoRefresh(true),
@@ -61,7 +66,17 @@ void CProcMonDoc::RefreshData()
 
     // Ako je odabrani proces u meduvremenu zavrsio, odabir se ponistava.
     if (m_selectedPid != 0 && m_processes.Find(m_selectedPid) == nullptr)
+    {
         m_selectedPid = 0;
+        ClearMemoryMap();
+        ClearHandles();
+        ClearStrings();
+        RefreshEnvironment();
+    }
+
+    // Povijest se dopunjava jednim ocitanjem, i to prije gradnje popisa jer ne
+    // ovisi o filtriranju ni o sortiranju.
+    m_history.Add(m_processes.Find(m_selectedPid));
 
     BuildVisibleList();
     RefreshDetails();
@@ -74,6 +89,140 @@ void CProcMonDoc::RefreshDetails()
 {
     m_threads.Refresh(m_selectedPid);
     m_modules.Refresh(m_selectedPid);
+}
+
+void CProcMonDoc::AnalyzeProcess()
+{
+    if (m_selectedPid == 0)
+        return;
+
+    // Pretraga nizova ide zadnja jer jedina otvara prozor s napretkom; do tada
+    // su ostali prikazi vec popunjeni.
+    RefreshMemoryMap();
+    RefreshHandles();
+    RefreshStrings();
+}
+
+void CProcMonDoc::RefreshMemoryMap()
+{
+    // Naredba je dostupna samo dok je proces odabran, pa je provjera zastita
+    // za slucaj da naredba stigne iz nekog drugog izvora.
+    if (m_selectedPid == 0)
+        return;
+
+    // Obilazak cijelog adresnog prostora traje osjetno dulje od ostalih
+    // ocitanja, pa se za to vrijeme mijenja oblik pokazivaca.
+    CWaitCursor wait;
+
+    m_memory.Refresh(m_selectedPid);
+    m_memoryPid      = m_selectedPid;
+    m_selectedRegion = -1;
+
+    UpdateAllViews(nullptr, HINT_MEMORY);
+}
+
+void CProcMonDoc::SetHexAddress(ULONGLONG address)
+{
+    if (m_reader.GetAddress() == address)
+        return;
+
+    m_reader.Read(m_selectedPid, address);
+
+    // Traka s adresom prati prikaz, jer se adresa mijenja i dvoklikom na regiju,
+    // ne samo upisom.
+    CMainFrame* pFrame = DYNAMIC_DOWNCAST(CMainFrame, AfxGetMainWnd());
+    if (pFrame != nullptr)
+        pFrame->SetAddressText(address);
+
+    UpdateAllViews(nullptr, HINT_HEX);
+}
+
+void CProcMonDoc::MoveHexAddress(LONGLONG delta)
+{
+    const ULONGLONG current = m_reader.GetAddress();
+    if (current == 0)
+        return;
+
+    // Pomak ispod pocetka adresnog prostora se zanemaruje.
+    if (delta < 0 && current < static_cast<ULONGLONG>(-delta))
+        return;
+
+    // Listanje ne staje na kraju regije nego preskace na iducu dostupnu, pa
+    // prikaz nikad ne zavrsi na adresi s koje se ne moze citati. Ako takve
+    // regije nema, adresa ostaje gdje je bila.
+    ULONGLONG address = 0;
+    if (!m_reader.FindReadable(m_selectedPid, current + delta, delta > 0, address))
+        return;
+
+    SetHexAddress(address);
+}
+
+void CProcMonDoc::SetSelectedRegion(int index)
+{
+    if (m_selectedRegion == index)
+        return;
+
+    m_selectedRegion = index;
+
+    UpdateAllViews(nullptr, HINT_REGION);
+}
+
+void CProcMonDoc::RefreshHandles()
+{
+    if (m_selectedPid == 0)
+        return;
+
+    // Kod procesa s nekoliko tisuca otvorenih objekata ocitanje traje osjetno
+    // dulje od ostalih, pa se mijenja oblik pokazivaca.
+    CWaitCursor wait;
+
+    m_handles.Refresh(m_selectedPid);
+    m_handlesPid = m_selectedPid;
+
+    UpdateAllViews(nullptr, HINT_HANDLES);
+}
+
+void CProcMonDoc::RefreshStrings()
+{
+    if (m_selectedPid == 0)
+        return;
+
+    // Pretraga tece u pomocnoj niti prozora s napretkom, pa sucelje ostaje
+    // odzivno i korisnik je moze prekinuti.
+    CScanProgressDlg dialog(m_strings, m_selectedPid);
+    dialog.DoModal();
+
+    m_stringsPid = m_selectedPid;
+
+    UpdateAllViews(nullptr, HINT_STRINGS);
+}
+
+void CProcMonDoc::RefreshEnvironment()
+{
+    m_environment.Refresh(m_selectedPid);
+}
+
+void CProcMonDoc::ClearMemoryMap()
+{
+    // Ocitanje s nulom samo prazni popis regija.
+    m_memory.Refresh(0);
+    m_memoryPid      = 0;
+    m_selectedRegion = -1;
+
+    // Prozor memorije pripada istom procesu, pa i on ostaje bez sadrzaja.
+    m_reader.Read(0, 0);
+}
+
+void CProcMonDoc::ClearHandles()
+{
+    m_handles.Refresh(0);
+    m_handlesPid = 0;
+}
+
+void CProcMonDoc::ClearStrings()
+{
+    m_strings.Clear();
+    m_stringsPid = 0;
 }
 
 void CProcMonDoc::BuildVisibleList()
@@ -297,6 +446,19 @@ void CProcMonDoc::SetSelectedPid(DWORD pid)
         return;
 
     m_selectedPid = pid;
+
+    // Mapa memorije i popis handle-ova opisuju proces za koji su ocitani, pa se
+    // kod promjene odabira ponistavaju i cekaju novu naredbu korisnika.
+    ClearMemoryMap();
+    ClearHandles();
+    ClearStrings();
+
+    // Krivulja opterecenja odnosi se na prethodni proces, pa bi se bez brisanja
+    // u istom crtezu nasla dva razlicita procesa.
+    m_history.ResetProcess();
+
+    RefreshEnvironment();
+
     RefreshDetails();
     UpdateStatusBar();
 
@@ -445,6 +607,10 @@ void CProcMonDoc::OnKillProcess()
     // ipak ne uspije, redak ce se vratiti pri sljedecem ocitanju.
     m_processes.Remove(pid);
     m_selectedPid = 0;
+    ClearMemoryMap();
+    ClearHandles();
+    ClearStrings();
+    RefreshEnvironment();
 
     BuildVisibleList();
     RefreshDetails();

@@ -11,9 +11,9 @@
 #define new DEBUG_NEW
 #endif
 
-IMPLEMENT_DYNCREATE(CModuleView, CListView)
+IMPLEMENT_DYNCREATE(CModuleView, CSortedListView)
 
-BEGIN_MESSAGE_MAP(CModuleView, CListView)
+BEGIN_MESSAGE_MAP(CModuleView, CSortedListView)
 END_MESSAGE_MAP()
 
 CModuleView::CModuleView()
@@ -33,12 +33,12 @@ CProcMonDoc* CModuleView::GetDocument() const
 BOOL CModuleView::PreCreateWindow(CREATESTRUCT& cs)
 {
     cs.style |= LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL;
-    return CListView::PreCreateWindow(cs);
+    return CSortedListView::PreCreateWindow(cs);
 }
 
 void CModuleView::OnInitialUpdate()
 {
-    CListView::OnInitialUpdate();
+    CSortedListView::OnInitialUpdate();
 
     GetListCtrl().SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES |
                                    LVS_EX_DOUBLEBUFFER);
@@ -72,6 +72,9 @@ void CModuleView::FillList()
     const std::vector<CModuleInfo>& items = pDoc->GetModules();
     const int topIndex = list.GetTopIndex();
 
+    std::vector<size_t> order;
+    BuildOrder(items.size(), order);
+
     // Odabir se izricito ponistava prije praznjenja popisa, inace obojeni redak
     // ostaje nacrtan i nakon brisanja stavke.
     list.SetItemState(-1, 0, LVIS_SELECTED | LVIS_FOCUSED);
@@ -93,9 +96,9 @@ void CModuleView::FillList()
 
     CString text;
 
-    for (size_t i = 0; i < items.size(); ++i)
+    for (size_t i = 0; i < order.size(); ++i)
     {
-        const CModuleInfo& info = items[i];
+        const CModuleInfo& info = items[order[i]];
 
         const int index = list.InsertItem(static_cast<int>(i), info.name);
         if (index < 0)
@@ -114,4 +117,44 @@ void CModuleView::FillList()
     list.RedrawWindow(nullptr, nullptr,
                       RDW_INVALIDATE | RDW_ERASE | RDW_FRAME |
                       RDW_ALLCHILDREN | RDW_UPDATENOW);
+}
+
+bool CModuleView::IsLess(size_t leftIndex, size_t rightIndex) const
+{
+    const std::vector<CModuleInfo>& items = GetDocument()->GetModules();
+
+    const CModuleInfo& left  = items[leftIndex];
+    const CModuleInfo& right = items[rightIndex];
+
+    switch (GetSortColumn())
+    {
+    case colModule:
+        {
+            const int result = left.name.CompareNoCase(right.name);
+            if (result != 0)
+                return result < 0;
+        }
+        break;
+
+    case colSize:
+        if (left.size != right.size)
+            return left.size < right.size;
+        break;
+
+    case colPath:
+        {
+            const int result = left.path.CompareNoCase(right.path);
+            if (result != 0)
+                return result < 0;
+        }
+        break;
+
+    case colBaseAddress:
+    default:
+        break;
+    }
+
+    // Moduli s jednakom vrijednoscu razvrstavaju se po baznoj adresi, koja je
+    // u jednom procesu jedinstvena.
+    return left.baseAddress < right.baseAddress;
 }

@@ -129,6 +129,38 @@ CString CSysUtil::FormatSystemError(DWORD dwError)
     return str;
 }
 
+CString CSysUtil::ToDosPath(const CString& devicePath)
+{
+    if (devicePath.IsEmpty())
+        return devicePath;
+
+    TCHAR szDrive[3]         = _T(" :");
+    TCHAR szTarget[MAX_PATH] = {};
+
+    // Za svako slovo pogona trazi se uredaj na koji upucuje, pa se usporeduje
+    // s pocetkom zadane putanje.
+    for (TCHAR letter = _T('A'); letter <= _T('Z'); ++letter)
+    {
+        szDrive[0] = letter;
+
+        // Pogon koji ne postoji, kao i naziv predug za spremnik, samo se
+        // preskace; putanja tada ostaje u izvornom obliku.
+        if (QueryDosDevice(szDrive, szTarget, MAX_PATH) == 0)
+            continue;
+
+        const int length = static_cast<int>(_tcslen(szTarget));
+
+        if (devicePath.GetLength() > length &&
+            devicePath.Left(length).CompareNoCase(szTarget) == 0 &&
+            devicePath[length] == _T('\\'))
+        {
+            return CString(szDrive) + devicePath.Mid(length);
+        }
+    }
+
+    return devicePath;
+}
+
 ULONGLONG CSysUtil::ToUInt64(const FILETIME& ft)
 {
     ULARGE_INTEGER value;

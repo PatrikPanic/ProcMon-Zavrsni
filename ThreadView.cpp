@@ -11,9 +11,9 @@
 #define new DEBUG_NEW
 #endif
 
-IMPLEMENT_DYNCREATE(CThreadView, CListView)
+IMPLEMENT_DYNCREATE(CThreadView, CSortedListView)
 
-BEGIN_MESSAGE_MAP(CThreadView, CListView)
+BEGIN_MESSAGE_MAP(CThreadView, CSortedListView)
 END_MESSAGE_MAP()
 
 CThreadView::CThreadView()
@@ -33,12 +33,12 @@ CProcMonDoc* CThreadView::GetDocument() const
 BOOL CThreadView::PreCreateWindow(CREATESTRUCT& cs)
 {
     cs.style |= LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SINGLESEL;
-    return CListView::PreCreateWindow(cs);
+    return CSortedListView::PreCreateWindow(cs);
 }
 
 void CThreadView::OnInitialUpdate()
 {
-    CListView::OnInitialUpdate();
+    CSortedListView::OnInitialUpdate();
 
     GetListCtrl().SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES |
                                    LVS_EX_DOUBLEBUFFER);
@@ -46,8 +46,11 @@ void CThreadView::OnInitialUpdate()
     FillList();
 }
 
-void CThreadView::OnUpdate(CView* /*pSender*/, LPARAM /*lHint*/, CObject* /*pHint*/)
+void CThreadView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* /*pHint*/)
 {
+    if (lHint != HINT_SELECTION && lHint != HINT_PROCESSES)
+        return;
+
     // Popis se osvjezava i kod promjene odabira i kod redovnog osvjezavanja
     // podataka, jer se dretve procesa stalno stvaraju i zavrsavaju.
     FillList();
@@ -72,6 +75,9 @@ void CThreadView::FillList()
     const std::vector<CThreadInfo>& items = pDoc->GetThreads();
     const int topIndex = list.GetTopIndex();
 
+    std::vector<size_t> order;
+    BuildOrder(items.size(), order);
+
     // Odabir se izricito ponistava prije praznjenja popisa, inace obojeni redak
     // ostaje nacrtan i nakon brisanja stavke.
     list.SetItemState(-1, 0, LVIS_SELECTED | LVIS_FOCUSED);
@@ -87,9 +93,9 @@ void CThreadView::FillList()
 
     CString text;
 
-    for (size_t i = 0; i < items.size(); ++i)
+    for (size_t i = 0; i < order.size(); ++i)
     {
-        const CThreadInfo& info = items[i];
+        const CThreadInfo& info = items[order[i]];
 
         text.Format(_T("%u"), info.tid);
         const int index = list.InsertItem(static_cast<int>(i), text);
@@ -122,4 +128,48 @@ void CThreadView::FillList()
     list.RedrawWindow(nullptr, nullptr,
                       RDW_INVALIDATE | RDW_ERASE | RDW_FRAME |
                       RDW_ALLCHILDREN | RDW_UPDATENOW);
+}
+
+bool CThreadView::IsLess(size_t leftIndex, size_t rightIndex) const
+{
+    const std::vector<CThreadInfo>& items = GetDocument()->GetThreads();
+
+    const CThreadInfo& left  = items[leftIndex];
+    const CThreadInfo& right = items[rightIndex];
+
+    switch (GetSortColumn())
+    {
+    case colPriority:
+        if (left.basePriority != right.basePriority)
+            return left.basePriority < right.basePriority;
+        break;
+
+    case colKernelTime:
+        if (left.kernelTime != right.kernelTime)
+            return left.kernelTime < right.kernelTime;
+        break;
+
+    case colUserTime:
+        if (left.userTime != right.userTime)
+            return left.userTime < right.userTime;
+        break;
+
+    case colCreated:
+        {
+            const ULONGLONG leftTime  = CSysUtil::ToUInt64(left.creationTime);
+            const ULONGLONG rightTime = CSysUtil::ToUInt64(right.creationTime);
+
+            if (leftTime != rightTime)
+                return leftTime < rightTime;
+        }
+        break;
+
+    case colTid:
+    default:
+        break;
+    }
+
+    // Dretve s jednakom vrijednoscu razvrstavaju se po identifikatoru, cime je
+    // redoslijed jednoznacan i popis ne poskakuje pri osvjezavanju.
+    return left.tid < right.tid;
 }

@@ -1,10 +1,9 @@
 #pragma once
 
-// CChildFrame - okvir jedne kartice. Sve tri kartice rade nad istim
-// dokumentom, pa bi im MFC dao isti naslov s rednim brojem prozora
-// ("Procesi:1", "Procesi:2"); zato okvir sam odreduje naslov prema vrsti
-// pogleda koji sadrzi. Kartice se ne mogu zatvoriti jer aplikacija stalno
-// prikazuje sva tri prikaza.
+// CChildFrame - okvir jedne kartice. Sve kartice rade nad istim dokumentom, pa
+// bi im MFC dao isti naslov s rednim brojem prozora ("Procesi:1", "Procesi:2");
+// zato okvir sam odreduje naslov prema vrsti pogleda koji sadrzi. Kartice se ne
+// mogu zatvoriti jer aplikacija stalno prikazuje sve prikaze.
 class CChildFrame : public CMDIChildWndEx
 {
     DECLARE_DYNCREATE(CChildFrame)
@@ -25,7 +24,8 @@ protected:
 
     DECLARE_MESSAGE_MAP()
 
-private:
+    // Izvedeni okvir sam stvara svoj sadrzaj, pa mu trebaju i naslov i nacin
+    // na koji se odreduje.
     static CString TitleForView(CRuntimeClass* pViewClass);
 
     CString m_strTitle;

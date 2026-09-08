@@ -54,8 +54,9 @@ void CProcessView::OnInitialUpdate()
 
 void CProcessView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* /*pHint*/)
 {
-    // Promjena odabira ne mijenja sadrzaj ovog popisa.
-    if (lHint == HINT_SELECTION)
+    // Popis procesa mijenja se samo novim ocitanjem; promjena odabira i
+    // ocitanje mape memorije ne diraju njegov sadrzaj.
+    if (lHint != HINT_PROCESSES)
         return;
 
     FillList();

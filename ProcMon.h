@@ -6,9 +6,11 @@
 
 #include "resource.h"
 
-// CProcMonApp - klasa aplikacije. Stvara tri predloska dokumenta: jedan za
-// popis procesa (registriran kao glavni) te po jedan za prikaz dretvi i modula.
-// Sve tri kartice otvaraju se pri pokretanju, nad istim dokumentom.
+// CProcMonApp - klasa aplikacije. Stvara devet predlozaka dokumenta: jedan za
+// popis procesa (registriran kao glavni) te po jedan za prikaz dretvi, modula,
+// mape memorije, heksadekadskog prikaza, handle-ova, znakovnih nizova,
+// varijabli okoline i grafikona. Sve kartice otvaraju se pri pokretanju, nad
+// istim dokumentom.
 class CProcMonApp : public CWinAppEx
 {
 public:
@@ -29,6 +31,12 @@ private:
     CMultiDocTemplate* m_pProcessTemplate;
     CMultiDocTemplate* m_pThreadTemplate;
     CMultiDocTemplate* m_pModuleTemplate;
+    CMultiDocTemplate* m_pMemoryTemplate;
+    CMultiDocTemplate* m_pGraphTemplate;
+    CMultiDocTemplate* m_pEnvironmentTemplate;
+    CMultiDocTemplate* m_pHexTemplate;
+    CMultiDocTemplate* m_pHandleTemplate;
+    CMultiDocTemplate* m_pStringTemplate;
 };
 
 extern CProcMonApp theApp;
