@@ -174,6 +174,28 @@ size_t CStringScanner::TailLength(const std::vector<BYTE>& buffer, size_t size) 
     while (length < size && length < chunkSize / 2 && IsPrintable(buffer[size - 1 - length]))
         ++length;
 
+    // Kod dvobajtnog zapisa jednobajtno brojanje stane vec na prvoj nuli, pa bi
+    // povrat unatrag bio prekratak da iduci komad procita cijeli niz.
+    const size_t wide = WideTailLength(buffer, size);
+
+    return (wide > length) ? wide : length;
+}
+
+// Rep se gleda unatrag po parovima; zadnji ispisiv bajt bez svoje nule prva je
+// polovica para presjecenog granicom citanja, pa i on pripada repu.
+size_t CStringScanner::WideTailLength(const std::vector<BYTE>& buffer, size_t size) const
+{
+    if (size == 0)
+        return 0;
+
+    size_t length = IsPrintable(buffer[size - 1]) ? 1 : 0;
+
+    while (length + 2 <= size && length < chunkSize / 2 &&
+           buffer[size - length - 1] == 0 && IsPrintable(buffer[size - length - 2]))
+    {
+        length += 2;
+    }
+
     return length;
 }
 

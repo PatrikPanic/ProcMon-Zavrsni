@@ -72,6 +72,9 @@ private:
     // vraca unatrag, da niz presjecen na granici citanja ne bude izgubljen.
     size_t TailLength(const std::vector<BYTE>& buffer, size_t size) const;
 
+    // Isti rep, ali gledan kao dvobajtni zapis: parovi (ispisiv znak, nula).
+    size_t WideTailLength(const std::vector<BYTE>& buffer, size_t size) const;
+
     std::vector<CStringInfo> m_items;
     bool                     m_accessible = false;
     bool                     m_bPartial   = false;
