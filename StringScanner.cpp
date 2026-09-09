@@ -139,7 +139,11 @@ bool CStringScanner::ScanRegion(HANDLE hProcess, ULONGLONG base, ULONGLONG size,
         {
             // Niz presjecen na granici citanja nasao bi se dvaput prekratak, pa
             // se pretraga za njegovu duljinu vraca unatrag.
-            const size_t tail = (read < request) ? 0 : TailLength(buffer, read);
+            // Rep se odvaja samo ako iza njega dolazi jos jedno citanje. Niz na
+            // kraju regije nema se gdje dovrsiti, pa se prijavljuje odmah.
+            const bool bMore = (offset + read < size);
+
+            const size_t tail = (read < request || !bMore) ? 0 : TailLength(buffer, read);
 
             // Kad se pretraga vraca unatrag, niz koji dopire do kraja spremnika
             // bit ce u cijelosti procitan u iducem komadu, pa se sada ne dodaje;
