@@ -131,7 +131,11 @@ void CEnvironmentCollector::ReadBlock(HANDLE hProcess, ULONGLONG address)
         // Dvije uzastopne nule zavrsavaju blok; prva je kraj zadnje varijable.
         bool bComplete = false;
 
-        for (size_t i = offset; i + 1 < buffer.size(); ++i)
+        // Par nula moze biti razdvojen granicom komada, pa u drugom i svakom
+        // iducem komadu provjera pocinje jedan znak prije njegovog pocetka.
+        const size_t start = (offset > 0) ? offset - 1 : 0;
+
+        for (size_t i = start; i + 1 < buffer.size(); ++i)
         {
             if (buffer[i] == 0 && buffer[i + 1] == 0)
             {

@@ -75,7 +75,13 @@ CString CObjectNameQuery::Query(HANDLE hObject)
     // Kad se previse upita zaustavilo, nazivi se prestaju traziti; ocitanje bi
     // inace za svaki takav objekt trajalo jos jedno vremensko ogranicenje i
     // ostavljalo za sobom nove niti.
-    if (m_pContext == nullptr || m_abandoned >= maxAbandoned)
+    if (m_abandoned >= maxAbandoned)
+        return CString();
+
+    // Ako pokretanje niti ranije nije uspjelo, pokusava se ponovno; kod
+    // dugotrajnog objekta nazivi bi inace ostali prazni do kraja rada
+    // aplikacije.
+    if (m_pContext == nullptr && !Start())
         return CString();
 
     m_pContext->hObject = hObject;

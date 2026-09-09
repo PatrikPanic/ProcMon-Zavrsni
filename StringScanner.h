@@ -56,9 +56,14 @@ private:
     bool ScanRegion(HANDLE hProcess, ULONGLONG base, ULONGLONG size,
                     CScanObserver* pObserver, ULONGLONG total, ULONGLONG& done);
 
-    void ScanBuffer(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base);
-    void ScanAscii(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base);
-    void ScanWide(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base);
+    // Zastavica bTailPending kaze da se citanje vraca unatrag, pa niz koji
+    // dopire do kraja spremnika treba prepustiti iducem komadu.
+    void ScanBuffer(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base,
+                    bool bTailPending);
+    void ScanAscii(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base,
+                   bool bTailPending);
+    void ScanWide(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base,
+                  bool bTailPending);
 
     void AddString(const std::vector<BYTE>& buffer, size_t start, size_t length,
                    ULONGLONG base, bool bWide);

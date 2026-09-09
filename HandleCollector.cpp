@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "HandleCollector.h"
-#include "ObjectNameQuery.h"
 #include "SysUtil.h"
 #include "StringIDs.h"
 
@@ -39,6 +38,11 @@ namespace
     const int   maxTableTries   = 6;
 }
 
+CHandleCollector::CHandleCollector()
+    : m_nameQuery(m_ntApi)
+{
+}
+
 void CHandleCollector::Refresh(DWORD pid)
 {
     m_items.clear();
@@ -64,10 +68,6 @@ void CHandleCollector::Refresh(DWORD pid)
     m_accessible = true;
 
     const CHandleTable* pTable = reinterpret_cast<const CHandleTable*>(&buffer[0]);
-
-    // Naziv objekta trazi pomocna nit, jer se taj upit kod nekih objekata zna
-    // zaustaviti do kraja rada procesa.
-    CObjectNameQuery nameQuery(m_ntApi);
 
     // Uz svaki handle tablica nosi i redni broj vrste objekta. Vrste koje se
     // uspiju prepoznati pamte se po tom broju, pa se njima kasnije popune
@@ -103,7 +103,7 @@ void CHandleCollector::Refresh(DWORD pid)
             {
                 // Datoteke se javljaju putanjom u obliku uredaja, pa se
                 // pretvaraju u uobicajen oblik s oznakom pogona.
-                info.name = CSysUtil::ToDosPath(nameQuery.Query(hDuplicate));
+                info.name = CSysUtil::ToDosPath(m_nameQuery.Query(hDuplicate));
             }
 
             CloseHandle(hDuplicate);

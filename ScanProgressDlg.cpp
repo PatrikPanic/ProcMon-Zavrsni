@@ -48,7 +48,13 @@ BOOL CScanProgressDlg::OnInitDialog()
     SetDlgItemText(IDC_SCAN_STATUS, CSysUtil::LoadStr(IDS_SCAN_STARTING));
 
     // Pretraga se pokrece tek kad prozor postoji, jer joj salje poruke.
-    AfxBeginThread(ThreadProc, this);
+    if (AfxBeginThread(ThreadProc, this) == nullptr)
+    {
+        // Prozor se zatvara tek na poruku o kraju pretrage, koju salje upravo
+        // ta nit; bez nje bi ostao otvoren bez ijednog nacina zatvaranja.
+        AfxMessageBox(CSysUtil::LoadStr(IDS_ERR_SCAN_THREAD), MB_OK | MB_ICONEXCLAMATION);
+        EndDialog(IDCANCEL);
+    }
 
     return TRUE;
 }

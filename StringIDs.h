@@ -73,6 +73,8 @@
 #define IDS_HEX_NO_DATA            40074
 #define IDS_HEX_DENIED             40075
 #define IDS_HEX_REGION             40076
+#define IDS_ERR_KILL_GONE          40077
+#define IDS_ERR_SCAN_THREAD        40078
 
 // Stupci i poruke: handle-ovi
 #define IDS_COL_HANDLE_VALUE       40130

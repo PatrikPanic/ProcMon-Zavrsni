@@ -54,10 +54,15 @@ double CHistoryCollector::ReadSystemCpu()
 
     // Prvo ocitanje sluzi samo kao polaziste. Vrijeme neradne dretve vec je
     // ukljuceno u vrijeme jezgre, pa je zauzece razlika ukupnog i neradnog.
-    if (m_previousTotal != 0 && total > m_previousTotal)
+    if (m_previousTotal != 0 && total > m_previousTotal && idle >= m_previousIdle)
     {
-        const ULONGLONG elapsed = total - m_previousTotal;
-        const ULONGLONG busy    = elapsed - (idle - m_previousIdle);
+        const ULONGLONG elapsed   = total - m_previousTotal;
+        const ULONGLONG idleDelta = idle - m_previousIdle;
+
+        // Oduzimanje je nad neoznacenim brojevima, pa bi razlika u smjeru koji
+        // se ne ocekuje omotala u ogroman broj i jednom podigla grafikon na
+        // 100 %; obje se razlike zato provjeravaju prije oduzimanja.
+        const ULONGLONG busy = (elapsed > idleDelta) ? (elapsed - idleDelta) : 0;
 
         percent = (100.0 * busy) / elapsed;
     }

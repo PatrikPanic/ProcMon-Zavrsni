@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NtApi.h"
+#include "ObjectNameQuery.h"
 
 #include <map>
 #include <vector>
@@ -21,6 +22,8 @@ struct CHandleInfo
 class CHandleCollector
 {
 public:
+    CHandleCollector();
+
     // Ako je pid jednak nuli, popis se samo prazni.
     void Refresh(DWORD pid);
 
@@ -42,5 +45,13 @@ private:
 
     std::vector<CHandleInfo> m_items;
     CNtApi                   m_ntApi;
+
+    // Naziv objekta trazi pomocna nit, jer se taj upit kod nekih objekata zna
+    // zaustaviti do kraja rada procesa. Upit zivi koliko i sam sakupljac: kad
+    // bi se stvarao pri svakom ocitanju, brojac napustenih niti krenuo bi
+    // iznova od nule, pa bi ponovljena ocitanja ostavljala za sobom sve vise
+    // napustenih niti i njihovih handle-ova.
+    CObjectNameQuery         m_nameQuery;
+
     bool                     m_accessible = false;
 };

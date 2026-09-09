@@ -22,6 +22,15 @@ struct CProcessRow
     bool expanded    = true;
 };
 
+// Proces zabiljezen za prekid. Uz identifikator se pamti i vrijeme stvaranja,
+// po kojem se neposredno prije prekida provjerava je li to jos uvijek isti
+// proces.
+struct CKillTarget
+{
+    DWORD     pid          = 0;
+    ULONGLONG creationTime = 0;
+};
+
 // CProcMonDoc - dokument u arhitekturi dokument/pogled. Sadrzi sve podatke,
 // postavke prikaza i obradu naredbi s Ribbon trake. Sva tri pogleda rade nad
 // istim dokumentom.
@@ -159,8 +168,8 @@ private:
 
     void UpdateStatusBar();
     void ReportKillError(const CString& name, DWORD pid, DWORD dwError) const;
-    void CollectDescendants(DWORD pid, std::vector<DWORD>& result) const;
-    bool TerminateOne(DWORD pid, DWORD& dwError) const;
+    void CollectDescendants(DWORD pid, std::vector<CKillTarget>& result) const;
+    bool TerminateOne(const CKillTarget& target, DWORD& dwError) const;
 
     CProcessCollector     m_processes;
     CThreadCollector      m_threads;
@@ -185,6 +194,7 @@ private:
     bool    m_bSortAscending;
     bool    m_bAutoRefresh;
     bool    m_bTreeMode;
+    bool    m_bScanInProgress;      // traje li pretraga nizova u pomocnoj niti
 
 public:
     virtual ~CProcMonDoc();

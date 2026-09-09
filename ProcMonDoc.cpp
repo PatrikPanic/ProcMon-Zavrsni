@@ -35,7 +35,8 @@ CProcMonDoc::CProcMonDoc()
       m_sortColumn(colCpu),
       m_bSortAscending(false),      // najzahtjevniji procesi na vrhu
       m_bAutoRefresh(true),
-      m_bTreeMode(true)
+      m_bTreeMode(true),
+      m_bScanInProgress(false)
 {
 }
 
@@ -62,6 +63,11 @@ void CProcMonDoc::Serialize(CArchive& /*ar*/)
 
 void CProcMonDoc::RefreshData()
 {
+    // Dok pomocna nit pretrazuje memoriju, popis nizova ne smije se dirati;
+    // vidi RefreshStrings.
+    if (m_bScanInProgress)
+        return;
+
     m_processes.Refresh();
 
     // Ako je odabrani proces u meduvremenu zavrsio, odabir se ponistava.
@@ -189,8 +195,15 @@ void CProcMonDoc::RefreshStrings()
 
     // Pretraga tece u pomocnoj niti prozora s napretkom, pa sucelje ostaje
     // odzivno i korisnik je moze prekinuti.
+    // Modalni prozor sprjecava korisnicki unos, ali glavnoj se niti i dalje
+    // isporucuju poruke mjeraca vremena. Osvjezavanje bi u tom trenutku moglo
+    // obrisati popis nizova koji pomocna nit jos puni, pa se preskace.
+    m_bScanInProgress = true;
+
     CScanProgressDlg dialog(m_strings, m_selectedPid);
     dialog.DoModal();
+
+    m_bScanInProgress = false;
 
     m_stringsPid = m_selectedPid;
 
@@ -563,9 +576,13 @@ void CProcMonDoc::OnKillProcess()
     const CString name = pInfo->name;
     const DWORD   pid  = pInfo->pid;
 
+    CKillTarget target;
+    target.pid          = pid;
+    target.creationTime = CSysUtil::ToUInt64(pInfo->creationTime);
+
     // Programi poput preglednika sastoje se od vise procesa, pa bi prekid samo
     // glavnog procesa ostavio ostale pokrenutima.
-    std::vector<DWORD> descendants;
+    std::vector<CKillTarget> descendants;
     CollectDescendants(pid, descendants);
 
     CString message;
@@ -588,15 +605,28 @@ void CProcMonDoc::OnKillProcess()
     {
         DWORD dwChildError = ERROR_SUCCESS;
         if (TerminateOne(descendants[i - 1], dwChildError))
-            m_processes.Remove(descendants[i - 1]);
+            m_processes.Remove(descendants[i - 1].pid);
     }
 
     // Neuspjeh se prijavljuje samo za odabrani proces. Pojedini potomak moze
     // zavrsiti sam od sebe cim mu roditelj nestane, pa to nije greska.
     DWORD dwError = ERROR_SUCCESS;
-    if (!TerminateOne(pid, dwError))
+    if (!TerminateOne(target, dwError))
     {
-        ReportKillError(name, pid, dwError);
+        // Proces koji je sam zavrsio prije potvrde nije neuspjeh prekida, pa se
+        // prijavljuje zasebnom porukom.
+        if (dwError == ERROR_NOT_FOUND)
+        {
+            CString message;
+            message.Format(CSysUtil::LoadStr(IDS_ERR_KILL_GONE), (LPCTSTR)name, pid);
+
+            AfxMessageBox(message, MB_OK | MB_ICONINFORMATION);
+        }
+        else
+        {
+            ReportKillError(name, pid, dwError);
+        }
+
         RefreshData();
         return;
     }
@@ -619,7 +649,7 @@ void CProcMonDoc::OnKillProcess()
     UpdateAllViews(nullptr, HINT_PROCESSES);
 }
 
-void CProcMonDoc::CollectDescendants(DWORD pid, std::vector<DWORD>& result) const
+void CProcMonDoc::CollectDescendants(DWORD pid, std::vector<CKillTarget>& result) const
 {
     const std::vector<CProcessInfo>& all = m_processes.GetAll();
 
@@ -636,7 +666,7 @@ void CProcMonDoc::CollectDescendants(DWORD pid, std::vector<DWORD>& result) cons
         bool bAlreadyListed = false;
         for (size_t j = 0; j < result.size(); ++j)
         {
-            if (result[j] == all[i].pid)
+            if (result[j].pid == all[i].pid)
             {
                 bAlreadyListed = true;
                 break;
@@ -646,19 +676,39 @@ void CProcMonDoc::CollectDescendants(DWORD pid, std::vector<DWORD>& result) cons
         if (bAlreadyListed)
             continue;
 
-        result.push_back(all[i].pid);
+        CKillTarget child;
+        child.pid          = all[i].pid;
+        child.creationTime = CSysUtil::ToUInt64(all[i].creationTime);
+
+        result.push_back(child);
         CollectDescendants(all[i].pid, result);
     }
 }
 
-bool CProcMonDoc::TerminateOne(DWORD pid, DWORD& dwError) const
+bool CProcMonDoc::TerminateOne(const CKillTarget& target, DWORD& dwError) const
 {
     dwError = ERROR_SUCCESS;
 
-    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION,
+                                  FALSE, target.pid);
     if (hProcess == nullptr)
     {
         dwError = GetLastError();
+        return false;
+    }
+
+    // Izmedu sastavljanja popisa i potvrde korisnika proces je mogao zavrsiti,
+    // a sustav njegov identifikator dodijeliti posve nepovezanom procesu. Isti
+    // identifikator uz razlicito vrijeme stvaranja znaci da to vise nije proces
+    // koji je korisnik odabrao.
+    FILETIME ftCreation = {}, ftExit = {}, ftKernel = {}, ftUser = {};
+
+    if (target.creationTime != 0 &&
+        (!GetProcessTimes(hProcess, &ftCreation, &ftExit, &ftKernel, &ftUser) ||
+         CSysUtil::ToUInt64(ftCreation) != target.creationTime))
+    {
+        CloseHandle(hProcess);
+        dwError = ERROR_NOT_FOUND;
         return false;
     }
 

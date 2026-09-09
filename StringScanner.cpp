@@ -137,11 +137,14 @@ bool CStringScanner::ScanRegion(HANDLE hProcess, ULONGLONG base, ULONGLONG size,
         if (ReadProcessMemory(hProcess, reinterpret_cast<LPCVOID>(base + offset),
                               &buffer[0], request, &read) && read > 0)
         {
-            ScanBuffer(buffer, read, base + offset);
-
             // Niz presjecen na granici citanja nasao bi se dvaput prekratak, pa
             // se pretraga za njegovu duljinu vraca unatrag.
             const size_t tail = (read < request) ? 0 : TailLength(buffer, read);
+
+            // Kad se pretraga vraca unatrag, niz koji dopire do kraja spremnika
+            // bit ce u cijelosti procitan u iducem komadu, pa se sada ne dodaje;
+            // inace bi se u popisu nasao dvaput, jednom prerano odsjecen.
+            ScanBuffer(buffer, read, base + offset, tail > 0);
 
             offset += (read > tail) ? (read - tail) : read;
         }
@@ -174,13 +177,15 @@ size_t CStringScanner::TailLength(const std::vector<BYTE>& buffer, size_t size) 
     return length;
 }
 
-void CStringScanner::ScanBuffer(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base)
+void CStringScanner::ScanBuffer(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base,
+                                bool bTailPending)
 {
-    ScanAscii(buffer, size, base);
-    ScanWide(buffer, size, base);
+    ScanAscii(buffer, size, base, bTailPending);
+    ScanWide(buffer, size, base, bTailPending);
 }
 
-void CStringScanner::ScanAscii(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base)
+void CStringScanner::ScanAscii(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base,
+                               bool bTailPending)
 {
     size_t start  = 0;
     size_t length = 0;
@@ -202,12 +207,14 @@ void CStringScanner::ScanAscii(const std::vector<BYTE>& buffer, size_t size, ULO
         length = 0;
     }
 
-    // Niz koji dopire do kraja spremnika zavrsava zajedno s njim.
-    if (length >= minLength)
+    // Niz koji dopire do kraja spremnika zavrsava zajedno s njim samo ako se
+    // citanje ne vraca unatrag; inace ga dovrsava i prijavljuje iduci komad.
+    if (length >= minLength && !bTailPending)
         AddString(buffer, start, length, base, false);
 }
 
-void CStringScanner::ScanWide(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base)
+void CStringScanner::ScanWide(const std::vector<BYTE>& buffer, size_t size, ULONGLONG base,
+                              bool bTailPending)
 {
     size_t i = 0;
 
@@ -229,7 +236,9 @@ void CStringScanner::ScanWide(const std::vector<BYTE>& buffer, size_t size, ULON
             i += 2;
         }
 
-        if (length >= minLength)
+        // Niz koji je stao tek na kraju spremnika prepusta se iducem komadu,
+        // iz istog razloga kao kod jednobajtnog zapisa.
+        if (length >= minLength && !(bTailPending && i + 1 >= size))
             AddString(buffer, start, length, base, true);
     }
 }
