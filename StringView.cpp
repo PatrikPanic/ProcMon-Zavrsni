@@ -119,6 +119,12 @@ void CStringView::FillList()
         list.SetItemText(index, colText, info.text);
     }
 
+    // Pretraga se zaustavlja na granici broja nalaza ili kolicine pregledane
+    // memorije, a moze je prekinuti i korisnik; u svim tim slucajevima popis
+    // nije potpun, pa to na kraju i pise.
+    if (pDoc->AreStringsPartial())
+        list.InsertItem(list.GetItemCount(), CSysUtil::LoadStr(IDS_STRINGS_PARTIAL));
+
     list.SetRedraw(TRUE);
 
     list.RedrawWindow(nullptr, nullptr,

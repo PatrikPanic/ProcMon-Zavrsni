@@ -27,9 +27,6 @@ public:
     // zavrsio na vrijeme.
     CString Query(HANDLE hObject);
 
-    // Koliko je niti do sada napusteno zbog zaustavljenog upita.
-    int GetAbandonedCount() const { return m_abandoned; }
-
 private:
     enum
     {

@@ -92,6 +92,7 @@
 #define IDS_STRING_WIDE            40145
 #define IDS_STRINGS_NO_LIST        40146
 #define IDS_STRINGS_DENIED         40147
+#define IDS_STRINGS_PARTIAL        40151
 #define IDS_SCAN_STARTING          40148
 #define IDS_SCAN_STATUS            40149
 #define IDS_SCAN_STOPPING          40150

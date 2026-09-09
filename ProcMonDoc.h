@@ -60,6 +60,7 @@ public:
     bool IsEnvironmentAccessible() const { return m_environment.IsAccessible(); }
     bool AreHandlesAccessible() const { return m_handles.IsAccessible(); }
     bool AreStringsAccessible() const { return m_strings.IsAccessible(); }
+    bool AreStringsPartial() const { return m_strings.IsPartial(); }
     bool IsHexAccessible() const { return m_reader.IsAccessible(); }
     bool IsHexValid(size_t offset) const { return m_reader.IsValid(offset); }
 

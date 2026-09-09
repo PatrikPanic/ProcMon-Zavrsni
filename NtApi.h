@@ -10,8 +10,6 @@ class CNtApi
 public:
     CNtApi();
 
-    bool IsAvailable() const { return m_pfnQueryInformationProcess != nullptr; }
-
     // Postavlja podatak o procesu u zadani spremnik; vraca true ako je upit
     // uspio.
     bool QueryProcess(HANDLE hProcess, PROCESSINFOCLASS infoClass,
